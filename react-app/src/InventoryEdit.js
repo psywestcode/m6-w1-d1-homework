@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Button, Container, Form, FormGroup, Input, Label } from 'reactstrap';
 import AppNavbar from './Navbar';
 
@@ -16,16 +16,14 @@ class InventoryEdit extends Component {
     this.state = {
       item: this.emptyInventory
     };
-
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   async componentDidMount() {
-    const { id } = this.props.match.params;
-
-    if (id !== 'new') {
-      const inventory = await (await fetch(`http://localhost:8080/api/inventory/${id}`)).json();
+    // CHANGED: Use this.props.params instead of this.props.match.params
+    if (this.props.params.id !== 'new') {
+      const inventory = await (await fetch(`/api/inventory/${this.props.params.id}`)).json();
       this.setState({ item: inventory });
     }
   }
@@ -34,7 +32,6 @@ class InventoryEdit extends Component {
     const target = event.target;
     const value = target.value;
     const name = target.name;
-
     let item = { ...this.state.item };
     item[name] = value;
     this.setState({ item });
@@ -51,14 +48,15 @@ class InventoryEdit extends Component {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(item)
-    });
-
-    this.props.history.push('/inventories');
+    }); // <-- Make sure you have this closing bracket and parenthesis!
+    
+    // CHANGED: Use this.props.navigate instead of this.props.history.push
+    this.props.navigate('/inventories');
   }
 
   render() {
     const { item } = this.state;
-    const title = <h2 className="mt-3">{item._id ? 'Edit Inventory' : 'Add Inventory'}</h2>;
+    const title = <h2>{item._id ? 'Edit Inventory' : 'Add Inventory'}</h2>;
 
     return (
       <div>
@@ -67,58 +65,28 @@ class InventoryEdit extends Component {
           {title}
           <Form onSubmit={this.handleSubmit}>
             <FormGroup>
-              <Label for="prodname" className="h5 mt-3">Product Name</Label>
-              <Input
-                type="text"
-                name="prodname"
-                id="prodname"
-                value={item.prodname || ''}
-                onChange={this.handleChange}
-                autoComplete="prodname"
-              />
+              <Label for="prodname">Product Name</Label>
+              <Input type="text" name="prodname" id="prodname" value={item.prodname || ''}
+                     onChange={this.handleChange} autoComplete="prodname" />
             </FormGroup>
-
             <FormGroup>
-              <Label for="qty" className="h5 mt-3">Quantity</Label>
-              <Input
-                type="text"
-                name="qty"
-                id="qty"
-                value={item.qty || ''}
-                onChange={this.handleChange}
-                autoComplete="qty"
-              />
+              <Label for="qty">Quantity</Label>
+              <Input type="text" name="qty" id="qty" value={item.qty || ''}
+                     onChange={this.handleChange} autoComplete="qty" />
             </FormGroup>
-
             <FormGroup>
-              <Label for="price" className="h5 mt-3">Price</Label>
-              <Input
-                type="text"
-                name="price"
-                id="price"
-                value={item.price || ''}
-                onChange={this.handleChange}
-                autoComplete="price"
-              />
+              <Label for="price">Price</Label>
+              <Input type="text" name="price" id="price" value={item.price || ''}
+                     onChange={this.handleChange} autoComplete="price" />
             </FormGroup>
-
             <FormGroup>
-              <Label for="status" className="h5 mt-3">Status</Label>
-              <Input
-                type="text"
-                name="status"
-                id="status"
-                value={item.status || ''}
-                onChange={this.handleChange}
-                autoComplete="status"
-              />
+              <Label for="status">Status</Label>
+              <Input type="text" name="status" id="status" value={item.status || ''}
+                     onChange={this.handleChange} autoComplete="status" />
             </FormGroup>
-
             <FormGroup>
-              <Button color="primary" type="submit" className="mt-3">Save</Button>{' '}
-              <Button color="secondary" tag={Link} to="/inventories" className="mt-3">
-                Cancel
-              </Button>
+              <Button color="primary" type="submit">Save</Button>{' '}
+              <Button color="secondary" tag={Link} to="/inventories">Cancel</Button>
             </FormGroup>
           </Form>
         </Container>
@@ -127,4 +95,15 @@ class InventoryEdit extends Component {
   }
 }
 
-export default InventoryEdit;
+// --- ADD THIS WRAPPER AT THE BOTTOM ---
+// This function extracts the hooks from React Router v6 and passes them 
+// down as props to the Class Component to resolve the 'undefined' error.
+function InventoryEditWrapper(props) {
+  const params = useParams();
+  const navigate = useNavigate();
+
+  return <InventoryEdit {...props} params={params} navigate={navigate} />;
+}
+
+// Export the wrapper instead of the class
+export default InventoryEditWrapper;

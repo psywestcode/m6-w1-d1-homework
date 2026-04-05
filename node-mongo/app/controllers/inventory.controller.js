@@ -45,24 +45,28 @@ exports.inventories = async (req, res) => {
   }
 };
 
-exports.deleteInventory = async (req, res) => {
-  try {
-    const inventory = await Inventory.findByIdAndRemove(req.params.id);
+exports.deleteInventory = (req, res) => {
+    const id = req.params.id;
 
-    if (!inventory) {
-      return res.status(404).json({
-        message: 'No inventory found with id = ' + req.params.id,
-        error: '404'
-      });
-    }
-
-    res.status(200).json({});
-  } catch (err) {
-    return res.status(500).send({
-      message: "Error -> Can't delete inventory with id = " + req.params.id,
-      error: err.message
-    });
-  }
+    // CHANGED: Use findByIdAndDelete instead of findByIdAndRemove
+    Inventory.findByIdAndDelete(id)
+        .then(data => {
+            if (!data) {
+                res.status(404).send({
+                    message: `Cannot delete Inventory with id=${id}. Maybe Inventory was not found!`
+                });
+            } else {
+                res.send({
+                    message: "Inventory was deleted successfully!"
+                });
+            }
+        })
+        .catch(err => {
+            console.error("Delete Error: ", err); // This prints the exact error in your Node terminal
+            res.status(500).send({
+                message: "Could not delete Inventory with id=" + id
+            });
+        });
 };
 
 exports.updateInventory = async (req, res) => {
