@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom'; // <-- MUST HAVE THESE
 import { Button, Container, Form, FormGroup, Input, Label } from 'reactstrap';
 import AppNavbar from './Navbar';
 
@@ -95,7 +95,7 @@ class InventoryEdit extends Component {
   }
 }
 
-// --- ADD THIS WRAPPER AT THE BOTTOM ---
+
 // This function extracts the hooks from React Router v6 and passes them 
 // down as props to the Class Component to resolve the 'undefined' error.
 function InventoryEditWrapper(props) {

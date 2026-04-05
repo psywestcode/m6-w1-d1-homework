@@ -4,38 +4,44 @@ import AppNavbar from './Navbar';
 import { Link } from 'react-router-dom';
 
 class InventoryList extends Component {
+
   constructor(props) {
     super(props);
-    this.state = {
-      inventories: [],
-      isLoading: true
-    };
+    this.state = { inventories: [], isLoading: true };
     this.removeInventory = this.removeInventory.bind(this);
   }
 
-  componentDidMount() {
+ componentDidMount() {
     this.setState({ isLoading: true });
 
-    fetch('http://localhost:8080/api/inventories')
-      .then(response => response.json())
+    // CHANGED: Added the leading slash '/' before api/inventory
+    fetch('/api/inventory')
+      .then(response => {
+        // Optional: Add a quick check to see if the response is actually OK
+        if (!response.ok) {
+           throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
       .then(data => this.setState({ inventories: data, isLoading: false }))
       .catch(error => {
-        console.error('Error loading inventories:', error);
-        this.setState({ isLoading: false });
+        console.error("Fetch error:", error);
+        this.setState({ isLoading: false }); // Stop loading even if there's an error
       });
   }
 
   async removeInventory(id) {
-    await fetch(`http://localhost:8080/api/inventory/${id}`, {
+    await fetch(`/api/inventory/${id}`, {
       method: 'DELETE',
       headers: {
-        Accept: 'application/json',
+        'Accept': 'application/json',
         'Content-Type': 'application/json'
       }
+    }).then(() => {
+      // Remove the item from the local state to immediately update the UI
+      let updatedInventories = [...this.state.inventories].filter(i => i._id !== id);
+      this.setState({ inventories: updatedInventories });
     });
-
-    const updatedInventories = [...this.state.inventories].filter(i => i._id !== id);
-    this.setState({ inventories: updatedInventories });
   }
 
   render() {
@@ -45,55 +51,44 @@ class InventoryList extends Component {
       return <p>Loading...</p>;
     }
 
-    const inventoryList = inventories.map(inventory => (
-      <tr key={inventory._id}>
-        <td>{inventory.prodname}</td>
-        <td>{inventory.qty}</td>
-        <td>{inventory.price}</td>
-        <td>{inventory.status}</td>
-        <td>
-          <ButtonGroup>
-            <Button
-              size="sm"
-              color="primary"
-              tag={Link}
-              to={`/inventories/${inventory._id}`}
-            >
-              Edit
-            </Button>
-            <Button
-              size="sm"
-              color="danger"
-              onClick={() => this.removeInventory(inventory._id)}
-            >
-              Delete
-            </Button>
-          </ButtonGroup>
-        </td>
-      </tr>
-    ));
+    const inventoryList = inventories.map(inventory => {
+      return (
+        <tr key={inventory._id}>
+          <td style={{whiteSpace: 'nowrap'}}>{inventory.prodname}</td>
+          <td>{inventory.qty}</td>
+          <td>{inventory.price}</td>
+          <td>{inventory.status}</td>
+          <td>
+            <ButtonGroup>
+              <Button size="sm" color="primary" tag={Link} to={"/inventories/" + inventory._id}>Edit</Button>
+              <Button size="sm" color="danger" onClick={() => this.removeInventory(inventory._id)}>Delete</Button>
+            </ButtonGroup>
+          </td>
+        </tr>
+      );
+    });
 
     return (
       <div>
-        <AppNavbar />
+        <AppNavbar/>
         <Container fluid>
-          <div className="float-end">
-            <Button color="success" className="my-4" tag={Link} to="/inventories/new">
-              Add Inventory
-            </Button>
+          <div className="float-right mb-3">
+            <Button color="success" tag={Link} to="/inventories/new">Add Inventory</Button>
           </div>
           <h3>Inventory List</h3>
           <Table className="mt-4">
             <thead>
               <tr>
-                <th>Product Name</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th width="20%">Product Name</th>
+                <th width="20%">Quantity</th>
+                <th width="20%">Price</th>
+                <th width="20%">Status</th>
+                <th width="20%">Actions</th>
               </tr>
             </thead>
-            <tbody>{inventoryList}</tbody>
+            <tbody>
+              {inventoryList}
+            </tbody>
           </Table>
         </Container>
       </div>
